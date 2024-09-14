@@ -1,4 +1,8 @@
+using Desafio_B3.data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton(new SqlServerConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 
