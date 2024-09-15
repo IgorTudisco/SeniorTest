@@ -1,5 +1,8 @@
-﻿using Desafio_B3.Model;
+﻿using Desafio_B3.data;
+using Desafio_B3.Model;
+using Desafio_B3.Service;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Desafio_B3.Controllers;
 
@@ -8,28 +11,70 @@ namespace Desafio_B3.Controllers;
 public class LiveOrderBookController : ControllerBase
 {
 
-    private static List<Bitstamp> bitstamps = new List<Bitstamp>();
-    private static int Id = 0;
+    private LiveOrderBookService _service;
+
+    public LiveOrderBookController(LiveOrderBookService service)
+    {
+        _service = service;
+    }
+
+
 
     [HttpPost]
     public IActionResult AcionarDadosBitstamps([FromBody] Bitstamp bitstamp)
     {
-        bitstamp.Id = Id++;
-        bitstamps.Add(bitstamp);
+        bool adicionado = _service.AcionarDadosBitstamps(bitstamp);
 
-        return CreatedAtAction(nameof(GetBitstampId), new { id = bitstamp.Id }, bitstamp);
+        if (adicionado)
+        {
+            return CreatedAtAction(nameof(GetBitstampId), new { id = bitstamp.Id }, bitstamp);
+        }
+        else
+        {
+            
+            return BadRequest();
+
+        }
+
 
     }
 
     [HttpGet]
-    public IEnumerable<Bitstamp> GetBitstamps()
+    public IActionResult GetBitstamps()
     {
-        return bitstamps;
+        return Ok(_service.FindBitstamp());
     }
 
     [HttpGet("{id}")]
-    public Bitstamp? GetBitstampId(int id)
+    public IActionResult GetBitstampId(int id)
     {
-        return bitstamps.FirstOrDefault(bitstamp => bitstamp.Id == id);
+        Bitstamp? findingBitstamp = _service.FindBitstampById(id);
+
+        if (findingBitstamp != null)
+        {
+            return Ok(findingBitstamp);
+        }
+        else
+        {
+            return NotFound();
+        }
     }
+
+    [HttpDelete("{id}")]
+    public IActionResult DeleteBitstamp(int id)
+    {
+        String? deletingBiststamp = _service.DeleteBitstamp(id);
+
+        if (deletingBiststamp != null)
+        {
+            return NoContent();
+        }
+        else
+        {
+            return NotFound();
+        }
+
+    }
+
+
 }
