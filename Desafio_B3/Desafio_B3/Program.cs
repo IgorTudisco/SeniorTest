@@ -13,8 +13,9 @@ builder.Services.AddDbContext<LiveOrderBookContext>(options =>
 // Registrando o Controller
 builder.Services.AddControllers();
 
-// Registrando o serviço LiveOrderBookService
+// Registrando os serviços
 builder.Services.AddScoped<LiveOrderBookService>();
+builder.Services.AddHostedService<WebSocketService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
