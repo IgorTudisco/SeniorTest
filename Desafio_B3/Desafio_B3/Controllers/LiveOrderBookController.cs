@@ -27,18 +27,18 @@ public class LiveOrderBookController : ControllerBase
     /// <summary>
     /// Adiciona um novo registro de Bitstamp no banco de dados.
     /// </summary>
-    /// <param name="bitstamp">Objeto Bitstamp contendo as informações do novo registro.</param>
+    /// <param name="bitstampOrder">Objeto Bitstamp contendo as informações do novo registro.</param>
     /// <returns>Retorna o objeto criado com seu ID ou um erro caso a adição falhe.</returns>
     /// <response code="201">Retorna o Bitstamp recém-criado.</response>
     /// <response code="400">Retorna um erro se o Bitstamp não puder ser adicionado.</response>
     [HttpPost]
-    public IActionResult AcionarDadosBitstamps([FromBody] Bitstamp bitstamp)
+    public IActionResult AcionarOrderBitstamp([FromBody] LiveOrderBookBitstamp bitstampOrder)
     {
-        bool adicionado = _service.AcionarDadosBitstamps(bitstamp);
+        bool adicionado = _service.AcionarOrder(bitstampOrder);
 
         if (adicionado)
         {
-            return CreatedAtAction(nameof(GetBitstampId), new { id = bitstamp.Id }, bitstamp);
+            return CreatedAtAction(nameof(GetOrderId), new { id = bitstampOrder.Id }, bitstampOrder);
         }
         else
         {
@@ -52,9 +52,9 @@ public class LiveOrderBookController : ControllerBase
     /// <returns>Uma lista de todos os Bitstamps registrados no banco de dados.</returns>
     /// <response code="200">Retorna a lista de Bitstamps.</response>
     [HttpGet]
-    public IActionResult GetBitstamps()
+    public IActionResult GetOrders()
     {
-        return Ok(_service.FindBitstamp());
+        return Ok(_service.FindOrders());
     }
 
     /// <summary>
@@ -65,13 +65,13 @@ public class LiveOrderBookController : ControllerBase
     /// <response code="200">Retorna o Bitstamp encontrado.</response>
     /// <response code="404">Retorna um erro se o Bitstamp não for encontrado.</response>
     [HttpGet("{id}")]
-    public IActionResult GetBitstampId(int id)
+    public IActionResult GetOrderId(int id)
     {
-        Bitstamp? findingBitstamp = _service.FindBitstampById(id);
+        LiveOrderBookBitstamp? findingOrder = _service.FindOrderById(id);
 
-        if (findingBitstamp != null)
+        if (findingOrder != null)
         {
-            return Ok(findingBitstamp);
+            return Ok(findingOrder);
         }
         else
         {
@@ -87,11 +87,11 @@ public class LiveOrderBookController : ControllerBase
     /// <response code="204">Retorna se o Bitstamp foi deletado com sucesso.</response>
     /// <response code="404">Retorna um erro se o Bitstamp não for encontrado.</response>
     [HttpDelete("{id}")]
-    public IActionResult DeleteBitstamp(int id)
+    public IActionResult DeleteOrder(int id)
     {
-        String? deletingBiststamp = _service.DeleteBitstamp(id);
+        String? deletingOrders = _service.DeleteOrders(id);
 
-        if (deletingBiststamp != null)
+        if (deletingOrders != null)
         {
             return NoContent();
         }

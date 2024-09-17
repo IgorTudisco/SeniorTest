@@ -14,13 +14,13 @@ public class LiveOrderBookService
         _context = context;
     }
 
-    public bool AcionarDadosBitstamps(Bitstamp? bitstamp)
+    public bool AcionarOrder(LiveOrderBookBitstamp? LiveOrderBookBitstamp)
     {
         bool adicionado = false;
 
-        if (bitstamp != null)
+        if (LiveOrderBookBitstamp != null)
         {
-            _context.Bitstamps.Add(bitstamp);
+            _context.BitstampOrders.Add(LiveOrderBookBitstamp);
             _context.SaveChanges();
             adicionado = true;
         }
@@ -29,9 +29,9 @@ public class LiveOrderBookService
     }
 
 
-    public List<Bitstamp>? FindBitstamp()
+    public List<LiveOrderBookBitstamp>? FindOrders()
     {
-        List<Bitstamp>? result = _context.Bitstamps.ToList();
+        List<LiveOrderBookBitstamp>? result = _context.BitstampOrders.ToList();
 
         if (result.IsNullOrEmpty())
         {
@@ -44,34 +44,34 @@ public class LiveOrderBookService
     }
 
 
-    public Bitstamp? FindBitstampById(int id)
+    public LiveOrderBookBitstamp? FindOrderById(int id)
     {
 
-        Bitstamp? findingBitstamp = _context.Bitstamps.FirstOrDefault(bitstamp => bitstamp.Id == id);
+        LiveOrderBookBitstamp? findingOrders = _context.BitstampOrders.FirstOrDefault(LiveOrderBookBitstamp => LiveOrderBookBitstamp.Id == id);
 
-        if (findingBitstamp == null)
+        if (findingOrders == null)
         {
             return null;
         }
         else
         {
 
-            return findingBitstamp;
+            return findingOrders;
         }
     }
 
-    public String? DeleteBitstamp(int id)
+    public String? DeleteOrders(int id)
     {
 
-        Bitstamp? findingBitstamp = _context.Bitstamps.FirstOrDefault(bitstamp => bitstamp.Id == id);
+        LiveOrderBookBitstamp? findingOrders = _context.BitstampOrders.FirstOrDefault(LiveOrderBookBitstamp => LiveOrderBookBitstamp.Id == id);
 
-        if (findingBitstamp == null)
+        if (findingOrders == null)
         {
             return null;
         }
         else
         {
-            _context.Remove(findingBitstamp);
+            _context.Remove(findingOrders);
             _context.SaveChanges();
             return "ok";
         }

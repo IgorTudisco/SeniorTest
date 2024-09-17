@@ -11,6 +11,6 @@ public class LiveOrderBookContext : DbContext
         
     }
 
-    public DbSet<Bitstamp> Bitstamps { get; set; }
+    public DbSet<LiveOrderBookBitstamp> BitstampOrders { get; set; }
 
 }

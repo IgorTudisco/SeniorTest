@@ -3,6 +3,7 @@ using Desafio_B3.data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Desafio_B3.Migrations
 {
     [DbContext(typeof(LiveOrderBookContext))]
-    partial class LiveOrderBookContextModelSnapshot : ModelSnapshot
+    [Migration("20240917011226_AddDefaultValues")]
+    partial class AddDefaultValues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

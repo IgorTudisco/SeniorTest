@@ -12,9 +12,16 @@ namespace Desafio_B3.Service
     public class WebSocketService : IHostedService
     {
         private ClientWebSocket? _client;
+        private readonly IServiceProvider _serviceProvider; // Injeção do IServiceProvider
+
+        public WebSocketService(IServiceProvider serviceProvider) // Remova o LiveOrderBookService aqui
+        {
+            _serviceProvider = serviceProvider;
+        }
 
         // URL do WebSocket do Live Order Book
-        private readonly string _webSocketUrl = "wss://ws.bitstamp.net";
+        private readonly String _webSocketUrl = "wss://ws.bitstamp.net";
+        private readonly String _currencyPair = "order_book_btcusd";
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
@@ -27,7 +34,7 @@ namespace Desafio_B3.Service
                 Console.WriteLine("Conectado ao WebSocket.");
 
                 // Substitua [currency_pair] por um par de moedas real, por exemplo, "btcusd"
-                string channelName = "order_book_btcusd";
+                string channelName = _currencyPair;
                 await SubscribeToChannel(channelName, cancellationToken);
 
                 // Consumir os dados continuamente
@@ -57,45 +64,66 @@ namespace Desafio_B3.Service
             }
         }
 
-        // Método para cancelar a assinatura de um canal
-        public async Task UnsubscribeFromChannel(string channelName, CancellationToken cancellationToken)
-        {
-            var unsubscribeMessage = new SubscriptionMessage("bts:unsubscribe", channelName);
-            string messageJson = JsonConvert.SerializeObject(unsubscribeMessage);
-
-            var bytes = Encoding.UTF8.GetBytes(messageJson);
-            try
-            {
-                await _client?.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, cancellationToken);
-                Console.WriteLine($"Cancelada a assinatura do canal {channelName}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao enviar mensagem de cancelamento: {ex.Message}");
-            }
-        }
-
         // Método para receber dados do WebSocket
         private async Task ReceiveData(CancellationToken cancellationToken)
         {
-            var buffer = new byte[1024 * 4];
+            var buffer = new byte[1024 * 4]; // Buffer inicial
+            var messageBuilder = new StringBuilder(); // Acumula partes da mensagem
 
-            while (_client?.State == WebSocketState.Open)
+            while (_client?.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    WebSocketReceiveResult result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                    WebSocketReceiveResult result;
+                    do
+                    {
+                        result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                        var messagePart = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        messageBuilder.Append(messagePart);
 
-                    // Decodifica a mensagem recebida
-                    var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    Console.WriteLine($"Mensagem recebida: {message}");
+                    } while (!result.EndOfMessage);
 
-                    // Aqui você pode processar os dados do Live Order Book e salvá-los no banco de dados
+                    // Quando a mensagem completa for recebida
+                    var completeMessage = messageBuilder.ToString();
+                    Console.WriteLine($"Mensagem completa recebida: {completeMessage}");
+
+                    // Deserializa a mensagem recebida em um objeto
+                    var liveOrderBookBitstamp = JsonConvert.DeserializeObject<LiveOrderBookBitstamp>(completeMessage);
+
+                    // Processa os dados recebidos
+                    await ProcessOrderBookMessageAsync(liveOrderBookBitstamp, cancellationToken);
+
+                    // Limpa o acumulador para a próxima mensagem
+                    messageBuilder.Clear();
+                }
+                catch (WebSocketException wsEx)
+                {
+                    Console.WriteLine($"Erro no WebSocket: {wsEx.Message}");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Erro ao receber dados: {ex.Message}");
                 }
+            }
+        }
+
+        // Método para processar a mensagem recebida
+        private async Task ProcessOrderBookMessageAsync(LiveOrderBookBitstamp liveOrderBook, CancellationToken cancellationToken)
+        {
+            // Criando um escopo para o serviço scoped
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var liveOrderBookService = scope.ServiceProvider.GetRequiredService<LiveOrderBookService>();
+
+                await Task.Run(() =>
+                {
+                    // Exemplo de manipulação de dados
+                    Console.WriteLine($"Ask: {liveOrderBook.Ask}, Bid: {liveOrderBook.Bid}, High: {liveOrderBook.High}, Last: {liveOrderBook.Last}");
+
+                    // Use o serviço scoped para processar a mensagem
+                    liveOrderBookService.AcionarOrder(liveOrderBook);
+
+                }, cancellationToken);
             }
         }
 
